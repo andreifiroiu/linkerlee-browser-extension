@@ -12,7 +12,7 @@ import {
 async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const cfg = await getConfig();
   if (!cfg.token) {
-    throw new ApiError('No API token configured.', 0);
+    throw new ApiError('No API token configured.', 0, {}, true);
   }
 
   const url = `${cfg.baseUrl}${path}`;
@@ -35,12 +35,16 @@ async function apiFetch(path: string, init: RequestInit = {}): Promise<Response>
     throw new ApiError(
       'The base URL must be an https:// address. Fix it in the extension options.',
       0,
+      {},
+      true,
     );
   }
   if (!(await hasHostAccess(cfg.baseUrl))) {
     throw new ApiError(
       `The extension isn't allowed to reach ${host}. Open the options page and save the URL again to grant access.`,
       0,
+      {},
+      true,
     );
   }
 

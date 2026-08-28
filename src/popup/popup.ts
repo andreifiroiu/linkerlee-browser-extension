@@ -19,7 +19,9 @@ const needsSetup = document.getElementById('needs-setup') as HTMLElement;
 const setupReason = document.getElementById('setup-reason') as HTMLParagraphElement;
 const openOptionsBtn = document.getElementById('open-options') as HTMLButtonElement;
 const form = document.getElementById('form') as HTMLFormElement;
-const modeBanner = document.getElementById('mode-banner') as HTMLParagraphElement;
+const statusPill = document.getElementById('status-pill') as HTMLElement;
+const statusPillLabel = document.getElementById('status-pill-label') as HTMLElement;
+const statusPillDetail = document.getElementById('status-pill-detail') as HTMLElement;
 const urlInput = document.getElementById('url') as HTMLInputElement;
 const titleInput = document.getElementById('title') as HTMLInputElement;
 const selectedTagsEl = document.getElementById('selected-tags') as HTMLElement;
@@ -36,9 +38,7 @@ const removeConfirm = document.getElementById('remove-confirm') as HTMLElement;
 const removeYesBtn = document.getElementById('remove-yes') as HTMLButtonElement;
 const removeNoBtn = document.getElementById('remove-no') as HTMLButtonElement;
 const platformLink = document.getElementById('platform-link') as HTMLAnchorElement;
-const setupPlatformLink = document.getElementById('setup-platform-link') as HTMLAnchorElement;
 const versionEl = document.getElementById('version') as HTMLElement;
-const setupVersionEl = document.getElementById('setup-version') as HTMLElement;
 
 const allTags = new Map<number, Tag>();
 const selectedIds = new Set<number>();
@@ -92,37 +92,107 @@ function platformUrl(baseUrl: string): string {
 // Read from the manifest rather than written here, so it cannot drift from what
 // the browser actually installed. Set before init() runs: it needs no config, and
 // the setup screen is exactly where someone is most likely to be asked for it.
-for (const el of [versionEl, setupVersionEl]) {
-  el.textContent = `v${chrome.runtime.getManifest().version}`;
-}
+// One footer serves both screens, so this is written once.
+versionEl.textContent = `v${chrome.runtime.getManifest().version}`;
 
-for (const link of [platformLink, setupPlatformLink]) {
-  link.addEventListener('click', (event) => {
-    event.preventDefault();
-    // Close only once the tab is actually open: window.close() destroys this
-    // document, so a rejected create would otherwise disappear without a trace.
-    chrome.tabs.create({ url: link.href }).then(
-      () => window.close(),
-      (err: unknown) => {
-        console.warn('[linkerlee] could not open platform link', err);
-      },
-    );
-  });
-}
+platformLink.addEventListener('click', (event) => {
+  event.preventDefault();
+  // Close only once the tab is actually open: window.close() destroys this
+  // document, so a rejected create would otherwise disappear without a trace.
+  chrome.tabs.create({ url: platformLink.href }).then(
+    () => window.close(),
+    (err: unknown) => {
+      console.warn('[linkerlee] could not open platform link', err);
+    },
+  );
+});
 
 function normalize(name: string): string {
   return name.trim().toLowerCase();
+}
+
+/**
+ * What the popup knows about reaching Linkerlee. Deliberately starts at
+ * 'unknown': being configured is not the same as being reachable, and nothing
+ * has been on the wire when the form is first shown.
+ */
+type Connection = 'unknown' | 'ok' | 'setup' | 'auth' | 'offline' | 'blocked' | 'server';
+
+let connection: Connection = 'unknown';
+let connectionDetail = '';
+
+/**
+ * The one badge in the header, derived rather than assigned. It answers two
+ * independent questions — can this popup reach Linkerlee, and is this page
+ * already in it — and an earlier version let whichever one wrote last win. A
+ * failed save then erased "Already saved" from a page that was still
+ * bookmarked, and nothing put it back. Both facts live in state now
+ * (`connection` and `existing`) and this renders whatever they currently say.
+ */
+function renderStatusPill(): void {
+  const write = (
+    text: string,
+    kind: 'neutral' | 'ok' | 'accent' | 'danger',
+    detail = '',
+  ): void => {
+    // The label, not the pill itself: writing textContent on the pill would
+    // delete the detail span that lives inside it.
+    statusPillLabel.textContent = text;
+    statusPill.className = `pill pill-${kind}`;
+    // The title is a sighted-mouse convenience. The detail span is the channel
+    // of record — it is in the accessibility tree, and role="status" on the
+    // pill announces it when either half changes.
+    if (detail) statusPill.title = detail;
+    else statusPill.removeAttribute('title');
+    statusPillDetail.textContent = detail;
+  };
+
+  switch (connection) {
+    case 'unknown':
+      return write('Syncing…', 'neutral');
+    case 'setup':
+      return write('Not connected', 'danger');
+    case 'auth':
+      // Not the server's own words: reportWriteFailure deliberately replaces a
+      // 401 body with advice the user can act on, and the badge should not
+      // undo that ten lines above it.
+      return write('Auth failed', 'danger', 'Your API token was rejected. Update it in the extension options.');
+    case 'blocked':
+      return write('Not connected', 'danger', connectionDetail);
+    case 'offline':
+      return write('Offline', 'danger', connectionDetail);
+    case 'server':
+      return write('Server error', 'danger', connectionDetail);
+    case 'ok':
+      return existing !== null
+        ? write('Already saved', 'accent', 'Already bookmarked — saving will update it.')
+        : write('Connected', 'ok');
+  }
+}
+
+function setConnection(next: Connection, detail = ''): void {
+  connection = next;
+  connectionDetail = detail;
+  renderStatusPill();
 }
 
 function showSetup(reason: string): void {
   setupReason.textContent = reason;
   needsSetup.hidden = false;
   form.hidden = true;
+  setConnection('setup');
+  // The footer is shared, so its link has to say the thing that is useful on
+  // the screen being shown — here, where the missing token comes from.
+  platformLink.textContent = 'Get your API token on Linkerlee ↗';
 }
 
 function showForm(): void {
   needsSetup.hidden = true;
   form.hidden = false;
+  // Not 'ok' — checkSetup() only asked local questions, so nothing has proved
+  // the server is there yet. The first request that comes back does that.
+  renderStatusPill();
+  platformLink.textContent = 'Open your Linkerlee account ↗';
 }
 
 function renderChips(): void {
@@ -436,8 +506,8 @@ function applyExistingLink(link: ExistingLink): void {
     selectedIds.add(tag.id);
   }
   if (baseline !== null) baseline = { ...baseline, tagIds: link.tags.map((tag) => tag.id) };
-  modeBanner.hidden = false;
-  modeBanner.textContent = 'Already bookmarked — saving will update it.';
+  // `existing` is what the pill reads for the bookmark half of its answer.
+  renderStatusPill();
   saveBtn.textContent = 'Update';
   // Only reachable once we know there is something to remove.
   removeBtn.hidden = false;
@@ -459,9 +529,7 @@ async function init(): Promise<void> {
     hostBanner.textContent = `Saving to ${host}`;
   }
 
-  const dashboardUrl = platformUrl(cfg.baseUrl);
-  platformLink.href = dashboardUrl;
-  setupPlatformLink.href = dashboardUrl;
+  platformLink.href = platformUrl(cfg.baseUrl);
 
   // Every local refusal apiFetch() would make, asked before the form is built:
   // a missing token, an unusable base URL, or a host grant that was declined or
@@ -513,6 +581,9 @@ async function init(): Promise<void> {
   ]);
 
   if (tagsResult.status === 'fulfilled') {
+    // The first proof that the server is actually there — the badge has said
+    // "Syncing…" until now.
+    setConnection('ok');
     for (const tag of tagsResult.value) {
       allTags.set(tag.id, tag);
     }
@@ -529,8 +600,15 @@ async function init(): Promise<void> {
     return;
   }
 
-  if (existingResult.status === 'fulfilled' && existingResult.value) {
-    applyExistingLink(existingResult.value);
+  if (existingResult.status === 'fulfilled') {
+    if (existingResult.value) applyExistingLink(existingResult.value);
+  } else {
+    // findLink already turns the expected 404 into null, so a rejection here is
+    // a real fault. Saying nothing lets the badge read "Connected" with no
+    // "Already saved" beside it, which the user reads as "this page is not
+    // saved yet" — and Save then creates a duplicate.
+    handleApiFailure(existingResult.reason, "Couldn't check whether this page is already saved");
+    showNotice('Could not tell whether this page is already saved — saving may create a second copy.');
   }
 
   if (suggestionsResult.status === 'fulfilled') {
@@ -577,11 +655,37 @@ async function init(): Promise<void> {
 }
 
 /**
+ * Move the header pill to match a failure.
+ *
+ * Status 0 is not one condition: apiFetch refuses locally for a missing token,
+ * an unusable base URL and a missing host grant, and only the fourth case is a
+ * dead network. `local` tells them apart, because "Offline" sends someone to
+ * check their Wi-Fi over a problem that is fixed on the options page.
+ *
+ * A 4xx that is not an auth failure stays out of the badge — a 422 on one field
+ * says nothing about whether Linkerlee is reachable, and belongs in the form
+ * status alone.
+ */
+function reflectFailureInPill(err: unknown): void {
+  if (!(err instanceof ApiError)) return;
+  if (err.status === 401 || err.status === 403) {
+    setConnection('auth');
+  } else if (err.status === 0) {
+    setConnection(err.local ? 'blocked' : 'offline', err.message);
+  } else if (err.status >= 500) {
+    // Reachable, but not answering. Left out of the badge entirely, this was
+    // the one failure that could put a green "Connected" beside a red error.
+    setConnection('server', err.message);
+  }
+}
+
+/**
  * Surface a failed write: a field error if the server gave one, else its
  * message. Returns whether it was an auth failure, which the caller uses to
  * leave the button disabled — retrying with the same bad token cannot help.
  */
 function reportWriteFailure(err: unknown): boolean {
+  reflectFailureInPill(err);
   if (err instanceof ApiError) {
     if (err.status === 401 || err.status === 403) {
       // The one failure the user can act on — say how, as init() does, rather
@@ -598,6 +702,7 @@ function reportWriteFailure(err: unknown): boolean {
 }
 
 function handleApiFailure(err: unknown, prefix: string): void {
+  reflectFailureInPill(err);
   if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
     setFormStatus('Auth failed. Update your token in options.', 'error');
     saveBtn.disabled = true;
@@ -674,7 +779,9 @@ removeYesBtn.addEventListener('click', async () => {
 
   showRemoveConfirm(false);
   removeBtn.hidden = true;
-  modeBanner.hidden = true;
+  // `existing` was just cleared, so the pill drops "Already saved" on its own —
+  // and the delete that got us here proves the connection is fine.
+  setConnection('ok');
   saveBtn.textContent = 'Save';
   // The form still holds the removed link's tags, and `existing` is now null, so
   // a click here would re-create what was just deleted.
@@ -735,6 +842,11 @@ form.addEventListener('submit', async (event) => {
   // Outside the try: a fault in this bookkeeping must not be reported as a
   // failed save, which would have the user click Save again and duplicate it.
   if (!saved) return;
+
+  // The write went through, so whatever the badge was complaining about is over
+  // — without this a retry that succeeds leaves a red "Offline" in the header
+  // beside a green "Saved." below it.
+  setConnection('ok');
 
   // What was submitted is on the server now, so it becomes the baseline. The
   // funnel then clears the stored draft — or keeps one, if the user carried on

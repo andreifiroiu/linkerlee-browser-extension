@@ -1,82 +1,121 @@
-:root {
-  color-scheme: light dark;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 14px;
-}
+@import '../styles/base.css';
 
-/* An author `display` beats the UA stylesheet's [hidden] rule, so any element
-   given a display here would stay on screen while hidden. That silently removed
-   the whole confirmation step once; make hidden mean hidden. */
-[hidden] {
-  display: none !important;
-}
+/* Layout for the popup only — every colour, button and field comes from
+   base.css. Note there is no border-radius or shadow on #root: the rounded
+   card in the design is the browser's own popup chrome, which Chrome and
+   Firefox already draw around this document. */
 
 body {
-  margin: 0;
   width: 360px;
-  background: Canvas;
-  color: CanvasText;
 }
 
-main {
-  padding: 1rem;
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header ------------------------------------------------------------------ */
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px 20px 14px;
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--hairline);
+}
+
+/* Host banner --------------------------------------------------------------
+   Chrome rather than a message: it names where the token and every saved page
+   are going, and it is on screen for the whole session on a self-hosted
+   instance. So it runs full width under the header instead of sitting inside
+   the body as a rounded card. Empty for the default host, and .banner:empty
+   collapses it. */
+#host-banner {
+  padding: 9px 20px;
+  border: none;
+  border-bottom: 1px solid var(--hairline);
+  border-radius: 0;
+}
+
+/* Body -------------------------------------------------------------------- */
+
+.body {
   display: grid;
-  gap: 1rem;
+  gap: 14px;
+  padding: 18px 20px 20px;
 }
 
-h1 {
-  font-size: 1rem;
+.setup-reason {
   margin: 0;
-  font-weight: 600;
+  color: var(--text-muted);
 }
 
-form {
-  display: grid;
-  gap: 0.85rem;
+/* URL ---------------------------------------------------------------------
+   Still a readonly <input> rather than a <span>: the URL is worth selecting
+   and copying. The wrapper carries the sunken field look so the input itself
+   can go transparent and borderless. */
+
+.url-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-field);
 }
 
-label {
-  display: grid;
-  gap: 0.3rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
+.url-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--accent-strong);
+  border-radius: 50%;
 }
 
-input[type='url'],
-input[type='text'] {
-  padding: 0.45rem 0.6rem;
-  border: 1px solid color-mix(in oklab, CanvasText 25%, transparent);
-  border-radius: 0.375rem;
-  background: Field;
-  color: FieldText;
+.url-input {
+  /* min-width:0 so a long URL truncates inside the flex row instead of
+     stretching it past the popup's 360px. */
+  min-width: 0;
+  flex: 1;
+  padding: 0;
   font: inherit;
+  font-size: 13px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  text-overflow: ellipsis;
 }
 
-input:focus {
-  outline: 2px solid AccentColor;
-  outline-offset: 1px;
+/* Scoped, not blanket. A bare `outline: none` here is later in the cascade than
+   base.css's :focus-visible at the same specificity, so it silently removed the
+   only focus indicator this field had. */
+.url-input:not(:focus-visible) {
+  outline: none;
 }
 
-input[readonly] {
-  background: color-mix(in oklab, Canvas 90%, CanvasText 10%);
+/* Decoration around the real indicator, which is the outline on .url-input
+   itself — a low-alpha wash over the sunken field is ~1.1:1 on its own. */
+.url-display:focus-within {
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
-.tags {
-  display: grid;
-  gap: 0.4rem;
-}
+/* Tags -------------------------------------------------------------------- */
 
 .tags-header {
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  gap: 8px;
 }
 
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  gap: 6px;
 }
 
 .chips:empty {
@@ -86,28 +125,43 @@ input[readonly] {
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-  background: color-mix(in oklab, AccentColor 18%, transparent);
-  color: CanvasText;
-  font-size: 0.8125rem;
+  gap: 5px;
+  padding: 4px 8px 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--chip-text);
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
+  border-radius: var(--radius-pill);
 }
 
+/* Tags that do not exist on the server yet, and will be created on save. */
 .chip-new {
-  background: color-mix(in oklab, #16a34a 18%, transparent);
+  color: var(--ok-text);
+  background: var(--ok-bg);
+  border-color: var(--ok-border);
 }
 
+/* Full --chip-text, not a lighter tint: this glyph is the entire affordance for
+   removing a tag, and the artboard's #c99b4a is 2.2:1 on the chip. The hover
+   state moved to a background tint so there is still feedback. */
 .chip button {
   all: unset;
-  cursor: pointer;
-  font-size: 0.9rem;
+  padding: 0 2px;
   line-height: 1;
-  opacity: 0.65;
+  font-weight: 700;
+  color: var(--chip-text);
+  border-radius: 3px;
+  cursor: pointer;
 }
 
 .chip button:hover {
-  opacity: 1;
+  background: var(--chip-border);
+}
+
+.chip button:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: 1px;
 }
 
 /* Laid out in flow rather than absolutely positioned, so the suggestion list
@@ -118,180 +172,114 @@ input[readonly] {
    unchanged. max-height still caps the growth and scrolls past it. */
 .dropdown {
   margin: 0;
-  padding: 0.25rem;
-  list-style: none;
-  max-height: 10rem;
+  padding: 4px;
+  max-height: 160px;
   overflow-y: auto;
-  background: Canvas;
-  border: 1px solid color-mix(in oklab, CanvasText 25%, transparent);
-  border-radius: 0.375rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  list-style: none;
+  background: var(--surface-page);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-field);
+  box-shadow: var(--shadow-pop);
 }
 
 .dropdown li {
-  padding: 0.35rem 0.6rem;
-  border-radius: 0.25rem;
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 0.8125rem;
 }
 
 .dropdown li:hover,
 .dropdown li[aria-selected='true'] {
-  background: color-mix(in oklab, AccentColor 18%, transparent);
+  background: var(--chip-bg);
+  color: var(--chip-text);
 }
 
 .dropdown li.create-option {
   font-style: italic;
-  color: color-mix(in oklab, CanvasText 75%, transparent);
+  color: var(--text-muted);
 }
 
-.row {
+/* Actions ----------------------------------------------------------------- */
+
+.actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
+  gap: 10px;
 }
 
-.footer {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-top: 0.15rem;
-  padding-top: 0.6rem;
-  border-top: 1px solid color-mix(in oklab, CanvasText 15%, transparent);
-}
-
-/* The setup screen is plain block flow with no gap of its own, so the footer
-   lands hard against the Open options button. The form above it gets its
-   breathing room from the grid gap; give this one the same distance. */
-#needs-setup .footer {
-  margin-top: 1rem;
-}
-
-/* Quieter than .muted: this is for reading back in a bug report, not something
-   to draw the eye on every save. */
-.version {
-  flex: none;
-  font-size: 0.75rem;
-  color: color-mix(in oklab, CanvasText 45%, transparent);
-  font-variant-numeric: tabular-nums;
-}
-
-.backlink {
-  font-size: 0.8125rem;
-  color: AccentColor;
-  text-decoration: none;
-}
-
-.backlink:hover {
-  text-decoration: underline;
-}
-
-.backlink:focus-visible {
-  outline: 2px solid AccentColor;
-  outline-offset: 2px;
-  border-radius: 0.25rem;
-}
-
-button {
-  padding: 0.45rem 0.85rem;
-  border-radius: 0.375rem;
-  border: 1px solid color-mix(in oklab, CanvasText 25%, transparent);
-  background: ButtonFace;
-  color: ButtonText;
-  cursor: pointer;
-  font: inherit;
-}
-
-button[type='submit'] {
-  background: AccentColor;
-  color: AccentColorText;
-  border-color: AccentColor;
-}
-
-button[disabled] {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-button:hover:not([disabled]) {
-  filter: brightness(0.97);
-}
-
-/* Secondary to Save: a destructive action should be reachable without being the
-   thing the eye lands on first, so it keeps the plain button face and carries
-   the weight in its text and border only. */
-button.danger {
-  color: #dc2626;
-  border-color: color-mix(in oklab, #dc2626 35%, transparent);
+/* Sits under the full-width Save button, so it needs its own left inset back
+   to the label grid — the ghost Remove button has no border to align on. */
+#remove {
+  margin-left: -10px;
 }
 
 /* Wraps, because "Remove this bookmark?" plus two buttons does not fit the
-   popup's 360px on one line at larger text sizes. Note the [hidden] rule at the
-   top of this file is what keeps this display declaration from overriding the
-   hidden attribute. */
+   popup's 360px on one line. Note the [hidden] rule in base.css is what keeps
+   this display declaration from overriding the hidden attribute. */
 .confirm {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.8125rem;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--danger-text);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-field);
 }
 
-.muted {
-  color: color-mix(in oklab, CanvasText 60%, transparent);
-  font-size: 0.8125rem;
+.confirm-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
 }
 
-.banner {
-  margin: 0;
-  padding: 0.4rem 0.6rem;
-  border-radius: 0.375rem;
-  background: color-mix(in oklab, AccentColor 15%, transparent);
-  font-size: 0.8125rem;
+/* The confirm block is danger-tinted, so a .btn-ghost's page-coloured fill and
+   --field-border sit at about 1.2:1 on it and the button all but vanishes —
+   next to the focus target the confirmation lands on. Give it real edges. */
+.confirm .btn-ghost {
+  background: var(--surface-page);
+  border-color: var(--danger-border);
+  color: var(--text);
 }
 
-/* The draft banner is a live region, so it stays in the tree and collapses when
-   empty rather than being toggled with `hidden` — screen readers differ on
-   whether they announce a region that was hidden when its text changed. */
-.banner:empty {
-  display: none;
+.confirm .btn-ghost:hover:not([disabled]) {
+  background: var(--surface-raised);
 }
 
-/* Where a self-hosted instance is named. Deliberately not a warning colour —
-   nothing is wrong — but it is on screen every time, because this is where the
-   token and every saved page are going. Empty for the default host. */
-.banner-host {
-  background: color-mix(in oklab, CanvasText 8%, transparent);
-  color: color-mix(in oklab, CanvasText 75%, transparent);
-}
-
-/* Warning tint for the unsaved-draft banner, in the same orange as the
-   saved-link badge, so it reads as "attention" rather than as the accent-tinted
-   informational banner above it. */
-.banner-warn {
-  background: color-mix(in oklab, #fba115 22%, transparent);
-}
-
-/* Failure state for the same banner: the draft could not be kept, so the tint
-   moves from "attention" to the error red already used for form status. */
-.banner-error {
-  background: color-mix(in oklab, #dc2626 15%, transparent);
-  color: #dc2626;
+.confirm .btn-danger:hover:not([disabled]) {
+  background: var(--surface-page);
 }
 
 /* box-shadow rather than a border, so the ring adds no layout shift when the
-   form goes from clean to dirty. */
-button[type='submit'].dirty {
-  box-shadow: 0 0 0 3px color-mix(in oklab, #fba115 45%, transparent);
+   form goes from clean to dirty.
+   Two shadows, not one: the button is itself amber now, so a tinted ring
+   against it is invisible. The first lays a gap in the page colour, the second
+   draws the ring outside it. */
+#save.dirty {
+  box-shadow:
+    0 0 0 2px var(--surface-page),
+    0 0 0 4px var(--chip-text);
 }
 
-.error {
-  color: #dc2626;
-  font-size: 0.8125rem;
+/* An id beats .btn[disabled]'s box-shadow: none, so a dirty Save kept its ring
+   while disabled mid-submit — the form is being sent, not waiting on a click. */
+#save.dirty[disabled] {
+  box-shadow: none;
 }
 
-.ok {
-  color: #16a34a;
-  font-size: 0.8125rem;
+/* Footer ------------------------------------------------------------------ */
+
+.popup-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--surface-raised);
+  border-top: 1px solid var(--hairline);
 }

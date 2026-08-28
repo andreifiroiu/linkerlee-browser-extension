@@ -8,59 +8,67 @@
   </head>
   <body>
     <main id="root">
-      <header>
-        <h1>Save to Linkerlee</h1>
+      <header class="popup-header">
+        <div class="brand">
+          <img class="brand-mark" src="/icons/icon-48.png" alt="" />
+          <h1 class="brand-title">Save to Linkerlee</h1>
+        </div>
+        <!-- Replaces the old #mode-banner: the same "already bookmarked" fact,
+             plus the connection state that previously only surfaced as a form
+             error after a failed save. It changes after a network round trip,
+             so it is a live region — role="status" is what announces it.
+             The detail span is the sentence the pill is too narrow to show; it
+             is in the accessibility tree rather than only in a title attribute,
+             which keyboard users cannot reach and touch users never see. -->
+        <span id="status-pill" class="pill pill-neutral" role="status">
+          <span id="status-pill-label">Syncing…</span>
+          <span id="status-pill-detail" class="sr-only"></span>
+        </span>
       </header>
 
-      <!-- Outside both sections: the destination matters on the setup screen too,
-           and that path returns before the form is ever shown. -->
+      <!-- Outside both sections: the destination matters on the setup screen
+           too, and that path returns before the form is ever shown. -->
       <p id="host-banner" class="banner banner-host"></p>
 
-      <section id="needs-setup" hidden>
+      <section id="needs-setup" class="body" hidden>
         <!-- Filled by the popup: "not configured yet" is only one of the reasons
              saving is impossible, and the others need naming to be fixable. -->
-        <p id="setup-reason">This extension isn't configured yet.</p>
-        <button type="button" id="open-options">Open options</button>
-        <div class="footer">
-          <a
-            id="setup-platform-link"
-            class="backlink"
-            href="https://linkerlee.com/dashboard"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Get your API token on Linkerlee ↗
-          </a>
-          <span id="setup-version" class="version"></span>
-        </div>
+        <p id="setup-reason" class="setup-reason">
+          This extension isn't configured yet.
+        </p>
+        <button type="button" id="open-options" class="btn btn-primary btn-block">
+          Open options
+        </button>
       </section>
 
-      <form id="form" hidden>
-        <p id="mode-banner" class="banner" hidden></p>
+      <form id="form" class="body" hidden>
+        <div class="field">
+          <label class="field-label" for="url">URL</label>
+          <div class="url-display">
+            <span class="url-dot" aria-hidden="true"></span>
+            <input id="url" class="url-input" type="url" readonly />
+          </div>
+        </div>
 
-        <label>
-          URL
-          <input id="url" type="url" readonly />
-        </label>
+        <div class="field">
+          <label class="field-label" for="title">Title</label>
+          <input id="title" class="input" type="text" placeholder="Page title" />
+        </div>
 
-        <label>
-          Title
-          <input id="title" type="text" placeholder="Page title" />
-        </label>
-
-        <div class="tags">
+        <div class="field tags">
           <div class="tags-header">
-            <span>Tags</span>
+            <label class="field-label" for="tag-search">Tags</label>
             <span id="tags-status" class="muted"></span>
           </div>
-          <div id="selected-tags" class="chips" aria-label="Selected tags"></div>
           <input
             id="tag-search"
+            class="input"
             type="text"
             placeholder="Search or create a tag…"
             autocomplete="off"
           />
           <ul id="tag-suggestions" class="dropdown" hidden></ul>
+          <div id="selected-tags" class="chips" aria-label="Selected tags"></div>
           <p id="no-tags-hint" class="muted" hidden>
             You don't have any tags yet — type a name and hit Enter to create
             one.
@@ -69,9 +77,12 @@
 
         <p id="draft-warning" class="banner banner-warn" role="status"></p>
 
-        <div class="row">
-          <button type="submit" id="save">Save</button>
-          <button type="button" id="remove" class="danger" hidden disabled>Remove</button>
+        <button type="submit" id="save" class="btn btn-primary btn-block">Save</button>
+
+        <div class="actions">
+          <button type="button" id="remove" class="btn btn-danger" hidden disabled>
+            Remove
+          </button>
           <span
             id="remove-confirm"
             class="confirm"
@@ -80,25 +91,29 @@
             hidden
           >
             <span id="remove-question">Remove this bookmark?</span>
-            <button type="button" id="remove-yes" class="danger">Yes, remove</button>
-            <button type="button" id="remove-no">Cancel</button>
+            <span class="confirm-actions">
+              <button type="button" id="remove-yes" class="btn btn-danger">
+                Yes, remove
+              </button>
+              <button type="button" id="remove-no" class="btn btn-ghost">Cancel</button>
+            </span>
           </span>
           <span id="form-status" class="muted" role="status"></span>
         </div>
-
-        <div class="footer">
-          <a
-            id="platform-link"
-            class="backlink"
-            href="https://linkerlee.com/dashboard"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open your Linkerlee account ↗
-          </a>
-          <span id="version" class="version"></span>
-        </div>
       </form>
+
+      <footer class="popup-footer">
+        <a
+          id="platform-link"
+          class="backlink"
+          href="https://linkerlee.com/dashboard"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Open your Linkerlee account ↗
+        </a>
+        <span id="version" class="version"></span>
+      </footer>
     </main>
 
     <script type="module" src="./popup.ts"></script>

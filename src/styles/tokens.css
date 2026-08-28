@@ -1,0 +1,130 @@
+/* The one place a colour is decided. Both surfaces import this through
+   base.css; nothing below it should carry a literal hex.
+
+   The palette is warm on purpose — it is the amber of icons/icon-128.png and
+   of the toolbar badge, not the browser's own accent. That means we no longer
+   get dark mode for free from the system-colour keywords (Canvas, CanvasText,
+   AccentColor) this replaced, so every token is answered a second time under
+   prefers-color-scheme: dark. Adding a token without its dark twin leaves a
+   cream surface stranded in a dark popup. */
+:root {
+  /* Still declared even though nothing reads the system colours any more:
+     scrollbars, the readonly input's caret and Firefox's form controls follow
+     it, and a light-only declaration would make them fight the dark palette. */
+  color-scheme: light dark;
+
+  --surface-page: #fffdf8;
+  --surface-raised: #fbf4e7;
+  --surface-sunken: #f7efdf;
+  --hairline: #f0e4d0;
+
+  --field-bg: #fffdf8;
+  --field-border: #e7d8bc;
+
+  --text: #211d15;
+  --text-muted: #6e6350;
+  /* The artboard's own greys do not survive a contrast check: it puts labels
+     and hints at #b3a896 (2.2:1 on the page surface) and the amber link at
+     #e8940a (2.2:1 on the header). Every foreground below is the artboard hue
+     walked down until it clears 4.5:1 against BOTH surfaces it can land on —
+     --surface-page and the darker --surface-raised of the header and footer.
+     Nothing here is eyeballed; the ratios are in the PR. */
+  --text-label: #7b6d55;
+  --text-faint: #7b6d55;
+  --text-version: #776d5c;
+
+  --accent: #f5a518;
+  --accent-strong: #f0a21c;
+  --accent-hover: #ee9905;
+  --accent-on: #2b1e04;
+
+  --link: #9a6207;
+  --link-hover: #7d4f05;
+
+  /* Two different jobs. --focus-outline is the WCAG 2.4.11 indicator and must
+     hold 3:1 against every ground a focusable thing sits on, including the chip
+     and confirm-block tints — the accent itself is only 2.1:1 on cream and was
+     invisible in light mode. --focus-ring is the soft halo behind it, decorative
+     only, so its alpha carries no accessibility weight. */
+  --focus-outline: #af7614;
+  --focus-ring: rgba(240, 162, 28, 0.22);
+
+  --chip-bg: #fceed3;
+  --chip-border: #f4dcab;
+  --chip-text: #966000;
+
+  --ok-bg: #e9f3e6;
+  --ok-border: #d3e6ce;
+  --ok-text: #2d7b31;
+
+  --warn-bg: #fdf0d8;
+  --warn-border: #f4dcab;
+  --warn-text: #8a5a00;
+
+  --danger-bg: #fbeae8;
+  --danger-border: #f2cfc9;
+  --danger-text: #b3261e;
+
+  --accent-glow: rgba(240, 162, 28, 0.35);
+  --shadow-pop: 0 4px 14px rgba(120, 84, 12, 0.14);
+
+  --radius-field: 10px;
+  --radius-card: 14px;
+  --radius-pill: 999px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface-page: #1a1712;
+    --surface-raised: #221e17;
+    --surface-sunken: #1f1a12;
+    --hairline: #332c1e;
+
+    --field-bg: #14110d;
+    --field-border: #3a3223;
+
+    --text: #f5efe2;
+    --text-muted: #b8ac96;
+    --text-label: #93876e;
+    --text-faint: #93876e;
+    --text-version: #8e8677;
+
+    /* The accent and the ink on top of it do not flip: an amber button with
+       near-black text is legible on either ground, and inverting it would give
+       the popup two different primary buttons. */
+    --accent: #f5a518;
+    --accent-strong: #f0a21c;
+    --accent-hover: #f7b733;
+    --accent-on: #2b1e04;
+
+    /* Links do flip — #e8940a is too dim against a dark surface to read as a
+       link rather than as muted text. */
+    --link: #f0a21c;
+    --link-hover: #f7b733;
+
+    /* The accent clears 3:1 comfortably on every dark ground (6.3:1 at worst,
+       on the chip tint), so unlike light mode it can be the indicator itself. */
+    --focus-outline: #f0a21c;
+    --focus-ring: rgba(245, 165, 24, 0.3);
+
+    --chip-bg: #3a2e14;
+    --chip-border: #56421a;
+    --chip-text: #f2c464;
+
+    --ok-bg: #1e2e1c;
+    --ok-border: #2f4a2b;
+    --ok-text: #8fd08a;
+
+    --warn-bg: #33280f;
+    --warn-border: #57441a;
+    --warn-text: #f0c97a;
+
+    --danger-bg: #33191a;
+    --danger-border: #5a2a2a;
+    --danger-text: #f4a3a0;
+
+    /* An amber halo under an amber button reads as a smudge on a dark ground. */
+    --accent-glow: rgba(0, 0, 0, 0.45);
+    --shadow-pop: 0 4px 14px rgba(0, 0, 0, 0.5);
+  }
+}

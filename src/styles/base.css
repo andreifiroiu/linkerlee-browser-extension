@@ -1,0 +1,309 @@
+@import './tokens.css';
+
+/* Primitives shared by the popup and the options page. Anything that is a
+   button, a field, a banner or a status word is defined here once; the two
+   surface stylesheets only lay these out. */
+
+/* An author `display` beats the UA stylesheet's [hidden] rule, so any element
+   given a display below would stay on screen while hidden. That silently
+   removed the whole remove-confirmation step once. Make hidden mean hidden,
+   and keep this first so nothing here can outrank it by order. */
+[hidden] {
+  display: none !important;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  /* px rather than rem throughout: :root already hard-set 14px, so rem was
+     never following the user's font-size preference either, and the popup is a
+     fixed-width surface whose type scale comes straight from the artboard. */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--surface-page);
+}
+
+/* --focus-outline, not --accent-strong: the accent is 2.1:1 on cream and the
+   ring was effectively invisible in light mode. This one holds 3:1 against
+   every ground something focusable sits on. */
+:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Fields ------------------------------------------------------------------ */
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--text);
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-field);
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--text-faint);
+}
+
+/* The halo is a box-shadow, not a wider border, so focusing a field shifts
+   nothing around it — but it is decoration. The outline underneath is the
+   actual focus indicator, because a 22%-alpha amber wash over a cream field is
+   about 1.1:1 and satisfies nothing. */
+.input:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: 1px;
+  border-color: var(--focus-outline);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+/* Mouse and touch focus keeps the soft look with no hard ring. */
+.input:focus:not(:focus-visible) {
+  outline: none;
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+/* Buttons ----------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 18px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface-page);
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.btn-block {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 15px;
+}
+
+.btn-primary {
+  font-weight: 700;
+  color: var(--accent-on);
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 2px 6px var(--accent-glow);
+}
+
+.btn-primary:hover:not([disabled]) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn-ghost:hover:not([disabled]) {
+  background: var(--surface-raised);
+}
+
+/* Secondary to Save: a destructive action should be reachable without being
+   the thing the eye lands on first, so it carries its weight in text colour
+   alone — no fill, no border. */
+.btn-danger {
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--danger-text);
+  background: none;
+  border-color: transparent;
+}
+
+.btn-danger:hover:not([disabled]) {
+  background: var(--danger-bg);
+}
+
+.btn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Banners ----------------------------------------------------------------- */
+
+.banner {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 13px;
+  border: 1px solid var(--warn-border);
+  border-radius: var(--radius-field);
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+
+/* The draft banner is a live region: it stays in the tree and empties rather
+   than being toggled with `hidden`, because screen readers differ on whether
+   they announce a region that was hidden when its text changed. Collapsing it
+   when empty is what keeps that from leaving a gap. */
+.banner:empty {
+  display: none;
+}
+
+.banner-warn {
+  border-color: var(--warn-border);
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+
+.banner-error {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+/* Where a self-hosted instance is named. Deliberately not a warning colour —
+   nothing is wrong — but it is on screen every time, because this is where the
+   token and every saved page are going. */
+.banner-host {
+  border-color: var(--hairline);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+}
+
+/* Status pills ------------------------------------------------------------ */
+
+/* In the accessibility tree, out of the layout. Used for the status pill's
+   detail sentence, which is too long to show in an eleven-character badge but
+   must not be reachable only through a title attribute. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.pill {
+  flex: none;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+.pill-neutral {
+  border-color: var(--hairline);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+}
+
+.pill-ok {
+  border-color: var(--ok-border);
+  background: var(--ok-bg);
+  color: var(--ok-text);
+}
+
+.pill-accent {
+  border-color: var(--chip-border);
+  background: var(--chip-bg);
+  color: var(--chip-text);
+}
+
+.pill-danger {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+/* Inline status words ------------------------------------------------------
+   setFormStatus() and setTagsStatus() in popup.ts assign these by replacing
+   className outright, so each one has to stand on its own — an element carrying
+   one of them cannot also carry a layout class. */
+
+.muted {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.error {
+  font-size: 12px;
+  color: var(--danger-text);
+}
+
+.ok {
+  font-size: 12px;
+  color: var(--ok-text);
+}
+
+/* Footer bits ------------------------------------------------------------- */
+
+.backlink {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--link);
+  text-decoration: none;
+}
+
+.backlink:hover {
+  color: var(--link-hover);
+  text-decoration: underline;
+}
+
+/* Quieter than .muted: this is for reading back in a bug report, not something
+   to draw the eye on every save. */
+.version {
+  flex: none;
+  font-size: 12px;
+  color: var(--text-version);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Brand ------------------------------------------------------------------- */
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.brand-mark {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+}
+
+.brand-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}

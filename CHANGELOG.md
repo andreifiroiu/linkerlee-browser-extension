@@ -9,6 +9,39 @@ together, or the built extension ships mislabelled.
 
 Issue keys refer to the `COW` project in Linear.
 
+## [0.9.4] — 2026-08-28
+
+### Changed
+
+- The popup and the options page have a look of their own. Both were drawn in
+  the browser's own system colours, which made the extension read as an
+  unbranded dialog and shared nothing with the amber Linkerlee mark. They now
+  use a warm palette built from that mark: a header carrying the logo and the
+  page title, uppercase field labels, the current URL in a quiet read-only
+  field, amber tag chips, a full-width Save button, and a footer with the
+  account link and the version. The toolbar badge moved to the same amber. A
+  hand-written dark palette replaces what the system colours used to give for
+  free, so dark mode is still followed.
+- The popup header now carries a status badge answering the two questions that
+  change what Save will do: whether Linkerlee is reachable (Connected, Offline,
+  Server error, Auth failed, Not connected) and whether this page is already
+  bookmarked (Already saved). It replaces the "Already bookmarked — saving will
+  update it." banner, which is still read out in full by screen readers and on
+  hover. Connection failures used to surface only as an error line under the
+  form, after the fact. The badge stays neutral until a request has actually
+  come back — being configured is not the same as being reachable.
+
+### Fixed
+
+- The popup no longer implies a page is unsaved when it could not find out. If
+  the lookup that decides "new bookmark or update?" failed, nothing said so, and
+  Save quietly created a second copy of a page that was already bookmarked. That
+  failure is now reported.
+- "Offline" is no longer shown for problems that have nothing to do with the
+  network. A missing token, an unusable base URL and a withdrawn host grant are
+  all refused before a request is sent; they now read "Not connected" and point
+  at the options page, where the fix actually is.
+
 ## [0.9.3] — 2026-08-20
 
 ### Fixed
