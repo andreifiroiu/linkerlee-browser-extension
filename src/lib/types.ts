@@ -34,6 +34,13 @@ export class ApiError extends Error {
     message: string,
     public readonly status: number,
     public readonly fieldErrors: Record<string, string[]> = {},
+    /**
+     * True when apiFetch refused before dispatching anything: no token, an
+     * unusable base URL, or a missing host grant. Status 0 alone cannot tell
+     * those apart from a dead network, and they need opposite advice — one is
+     * fixed on the options page, the other by reconnecting.
+     */
+    public readonly local = false,
   ) {
     super(message);
     this.name = 'ApiError';

@@ -4,7 +4,9 @@ import { ApiError } from '../lib/types';
 import { isSaveableUrl } from '../lib/urls';
 
 const BADGE_TEXT = '✓';
-const BADGE_COLOR = '#fba115';
+// The --accent from src/styles/tokens.css: the toolbar checkmark and the popup
+// it opens should be the same amber.
+const BADGE_COLOR = '#F5A518';
 
 async function refreshBadge(tabId: number, url: string | undefined): Promise<void> {
   await chrome.action.setBadgeText({ tabId, text: '' });

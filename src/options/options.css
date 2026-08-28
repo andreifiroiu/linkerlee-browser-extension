@@ -1,107 +1,84 @@
-:root {
-  color-scheme: light dark;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
+@import '../styles/base.css';
+
+/* Layout for the options tab only. Unlike the popup this is a full browser
+   page, so the card gets the radius and shadow the popup delegates to the
+   browser's own chrome. */
 
 body {
-  margin: 0;
-  padding: 2rem;
-  background: Canvas;
-  color: CanvasText;
+  padding: 40px 20px;
+  background: var(--surface-raised);
 }
 
-main {
-  max-width: 32rem;
+.card {
+  max-width: 560px;
   margin: 0 auto;
+  overflow: hidden;
+  background: var(--surface-page);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-pop);
 }
 
-h1 {
-  margin: 0 0 0.5rem;
-  font-size: 1.5rem;
+.card-header {
+  padding: 18px 24px;
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.card-header .brand-title {
+  font-size: 17px;
+}
+
+.card-body {
+  padding: 22px 24px 26px;
 }
 
 .lead {
-  color: color-mix(in oklab, CanvasText 70%, transparent);
-  margin: 0 0 1.5rem;
+  margin: 0 0 22px;
+  color: var(--text-muted);
 }
 
-em {
+.lead em {
   font-style: normal;
   font-weight: 600;
+  color: var(--text);
 }
 
 form {
   display: grid;
-  gap: 1rem;
-}
-
-label {
-  display: grid;
-  gap: 0.35rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-input {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid color-mix(in oklab, CanvasText 25%, transparent);
-  border-radius: 0.375rem;
-  background: Field;
-  color: FieldText;
-  font: inherit;
-}
-
-input:focus {
-  outline: 2px solid AccentColor;
-  outline-offset: 1px;
+  gap: 16px;
 }
 
 .row {
   display: flex;
-  gap: 0.5rem;
   align-items: center;
-}
-
-button {
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  border: 1px solid color-mix(in oklab, CanvasText 25%, transparent);
-  background: ButtonFace;
-  color: ButtonText;
-  cursor: pointer;
-  font: inherit;
-}
-
-button[type='submit'] {
-  background: AccentColor;
-  color: AccentColorText;
-  border-color: AccentColor;
-}
-
-button:hover {
-  filter: brightness(0.97);
-}
-
-.status {
-  margin-top: 1rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
-  background: color-mix(in oklab, AccentColor 15%, transparent);
-}
-
-.status.error {
-  background: color-mix(in oklab, #dc2626 20%, transparent);
+  gap: 10px;
+  margin-top: 4px;
 }
 
 /* The destination for the token and for every page URL the extension looks up,
-   so it stays on screen rather than being implied by a field. Collapses when
-   empty, which is the default-host case. */
-.host-note {
-  margin: -0.35rem 0 0;
-  font-size: 0.8125rem;
-  color: color-mix(in oklab, CanvasText 65%, transparent);
+   so it stays on screen rather than being implied by a field. Pulled up under
+   the Base URL field it belongs to; .banner:empty collapses it for the
+   default host, taking the negative margin with it. */
+#host-note {
+  margin-top: -8px;
 }
 
-.host-note:empty {
-  display: none;
+/* Two classes, so this outranks base.css's bare .error when options.ts toggles
+   it on — the connection result is a block of feedback, not an inline word. */
+.status {
+  margin: 20px 0 0;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--ok-text);
+  background: var(--ok-bg);
+  border: 1px solid var(--ok-border);
+  border-radius: var(--radius-field);
+}
+
+.status.error {
+  font-size: 14px;
+  color: var(--danger-text);
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
 }

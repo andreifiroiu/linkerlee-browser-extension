@@ -29,11 +29,15 @@ function showHostNote(baseUrl: string): void {
     hostNote.textContent = '';
     return;
   }
+  // Two messages of very different severity share this element: naming a
+  // working self-hosted host is information, an unparseable address is a
+  // failure. They must not look alike, or a typo reads as a working config.
   const host = hostLabel(baseUrl);
-  hostNote.textContent =
-    host === null
-      ? 'Not a usable address — the base URL must start with https:// and name a single host.'
-      : `Self-hosted: your token and the pages you save are sent to ${host}.`;
+  const usable = host !== null;
+  hostNote.className = usable ? 'banner banner-warn' : 'banner banner-error';
+  hostNote.textContent = usable
+    ? `Self-hosted: your token and the pages you save are sent to ${host}.`
+    : 'Not a usable address — the base URL must start with https:// and name a single host.';
 }
 
 async function load(): Promise<void> {
